@@ -14,6 +14,9 @@ router.get("/:id", productsController.getProductById);
 // Añadir un nuevo producto
 router.post("/", productsController.addProduct);
 
+//Vender un producto
+router.post("/sell", productsController.sellProduct);
+
 // Actualizar un producto
 router.put("/:id", productsController.updateProduct);
 

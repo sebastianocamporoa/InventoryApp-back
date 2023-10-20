@@ -1,4 +1,6 @@
 const Product = require("../models/Product");
+const Category = require("../models/Category");
+const Sale = require("../models/Sale");
 
 // Obtener todos los productos
 exports.getAllProducts = async (req, res) => {
@@ -58,6 +60,63 @@ exports.addProduct = async (req, res) => {
     res.status(201).json(newProduct);
   } catch (err) {
     res.status(400).json({ message: err.message });
+  }
+};
+
+//Vender un producto
+exports.sellProduct = async (req, res) => {
+  try {
+    const { productName, productCategory, quantitySold, salePrice } = req.body;
+
+    // Obtener todos los productos que coinciden con el nombre y categoría
+    const category = await Category.findOne({ categoryName: productCategory });
+    if (!category) {
+      return res.status(400).send({ message: "Categoría no encontrada" });
+    }
+
+    const matchingProducts = await Product.find({
+      name: productName,
+      category: category.id,
+    });
+    // Calcular el inventario total de estos productos
+    const totalInventory = matchingProducts.reduce(
+      (acc, product) => acc + product.quantity,
+      0
+    );
+    if (totalInventory < quantitySold) {
+      return res
+        .status(400)
+        .send({
+          message:
+            "No hay suficiente inventario, inventario restante: " +
+            totalInventory,
+        });
+    }
+
+    let quantityToDeduct = quantitySold;
+    for (const product of matchingProducts) {
+      if (product.quantity >= quantityToDeduct) {
+        product.quantity -= quantityToDeduct;
+        await product.save();
+        break; // Ya se ha satisfecho la cantidad vendida
+      } else {
+        quantityToDeduct -= product.quantity;
+        product.quantity = 0;
+        await product.save();
+      }
+    }
+
+    const sale = new Sale({
+      productName,
+      productCategory,
+      quantitySold,
+      salePrice,
+    });
+    await sale.save();
+
+    res.status(201).send(sale);
+  } catch (error) {
+    res.status(500).send({ message: error });
   }
 };
 
