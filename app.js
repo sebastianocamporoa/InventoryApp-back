@@ -5,6 +5,8 @@ const bodyParser = require("body-parser");
 const productRoutes = require("./routes/products");
 const categoryRoutes = require("./routes/categories");
 const purchaseRoutes = require("./routes/purchaseRoutes");
+const dashboardRoutes = require("./routes/dashboard");
+
 
 const app = express();
 
@@ -16,6 +18,7 @@ app.use(bodyParser.json());
 app.use("/categories", categoryRoutes);
 app.use("/products", productRoutes);
 app.use('/purchase', purchaseRoutes);
+app.use('/dashboard', dashboardRoutes);
 
 const PORT = 3001;
 app.listen(PORT, () => {
